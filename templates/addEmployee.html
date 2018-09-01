@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FYP</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link href="https://getbootstrap.com/docs/3.3/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">  
+    <link href="../static/css/main.css" rel="stylesheet">
+    <script src="../static/js/jquery-1.11.2.js"></script>
+    <script src="../static/js/addEmployee.js"></script>
+   
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation" class="active"><a href="/userHome">Home</a></li>
+            <li role="presentation" class="active"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Medical Notes System</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>Medical Notes System</h1>
+        <form class="form-signin">
+
+        <label for="inputStaffId" class="sr-only">Staff ID</label>
+        <input type="text" name="inputStaffId" id="inputStaffId" class="form-control" placeholder="Staff ID" required autofocus>
+    
+        <label for="inputFirstName" class="sr-only">First Name</label>
+        <input type="text" name="inputFirstName" id="inputFirstName" class="form-control" placeholder="First Name" required autofocus>
+
+        <label for="inputSurname" class="sr-only">Surname</label>
+        <input type="name" name="inputSurname" id="inputSurname" class="form-control" placeholder="Surname" required autofocus>
+
+        <label for="inputEmail" class="sr-only">Email</label>
+        <input type="email" name="inputEmail" id="inputEmail" class="form-control" placeholder="Email" required autofocus>
+
+        <label for="inputJob" class="sr-only">Job</label>
+        <input type="text" name="inputJob" id="inputJob" class="form-control" placeholder="Job" required autofocus>
+
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" required>
+        
+        <button id="btnAddEmployee" class="btn btn-lg btn-primary btn-block" type="button">Create New Employee</button>
+      </form>
+      </div>
+
+
+    </div>
+  </body>
+</html>
+

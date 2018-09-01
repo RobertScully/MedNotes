@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FYP</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link href="https://getbootstrap.com/docs/3.3/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">  
+    <link href="../static/css/main.css" rel="stylesheet">
+    <script src="../static/js/jquery-1.11.2.js"></script>
+   
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+              <li role="presentation" class="active"><a href="/userHome">Home</a></li>
+              <li role="presentation" class="active"><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Medical Notes System</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>{{session['patient_id']}} Notes</h1>
+        <a href="/addNote/{{session['patient_id']}}">Add Note</a>
+        <table class = "table">
+            <thead>
+              <tr>
+              <th>Note Title</th>
+              <th>Note</th>
+              <th>Note Date</th>
+              <th>Employee</th>
+            </tr>
+            </thead>
+        {% for note in notes %}
+                <tr>
+                  <h4>
+                    <td>{{ note[1] }}</td>
+                    <td>{{ note[2] }}</td>
+                    <td>{{ note[3] }}</td>
+                    <td>{{ note[4] }}</td>
+                  </h4>
+                </tr>
+        {% endfor %}
+      </table>
+      </div>
+
+
+
+    </div>
+  </body>
+</html>
+
