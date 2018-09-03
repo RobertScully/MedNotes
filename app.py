@@ -1,4 +1,4 @@
-from flask import Flask, render_template, json, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, json, request, redirect, url_for, session
 from flaskext.mysql import MySQL
 from werkzeug import generate_password_hash, check_password_hash
 from PIL import Image
@@ -25,30 +25,35 @@ def main():
     else:
         return redirect(url_for('showSignIn'))
 
+
 @app.route('/showSignIn')
 def showSignIn():
     return render_template('signin.html')
+
 
 @app.route('/userHome')
 def userHome():
     if session.get('user'):
         return render_template('userHome.html')
     else:
-        return render_template('error.html',error = 'Error No Access Please Sign In')
+        return render_template('error.html', error='Error No Access Please Sign In')
 
-@app.route('/showSuccess')#Fix
+
+@app.route('/showSuccess')
 def showSuccess():
     if session.get('user'):
-        return render_template('/success.html', success = 'Record Added Successfully to the Database')
+        return render_template('success.html', success='Record Added Successfully to the Database')
     else:
-        return render_template('error.html',error = 'Error No Access Please Sign In')
+        return render_template('error.html', error='Error No Access Please Sign In')
+
 
 @app.route('/logout')
 def logout():
-    session.pop('user',None)
+    session.pop('user', None)
     return redirect('/')
 
-@app.route('/validateLogin',methods=['POST'])
+
+@app.route('/validateLogin', methods=['POST'])
 def validateLogin():
     try:
         _staffid = request.form['inputStaffId']
@@ -57,33 +62,35 @@ def validateLogin():
         # connect to mysql
         connVL = mysql.connect()
         cursor = connVL.cursor()
-        cursor.callproc('sp_validateLogin',(_staffid,))
+        cursor.callproc('sp_validateLogin', (_staffid,))
         data = cursor.fetchall()
 
         if len(data) > 0:
             if check_password_hash(str(data[0][2]),_password):
                 session['user'] = data[0][3] + ' ' + data[0][4]
-                session['user_id'] =  data[0][1]
+                session['user_id'] = data[0][1]
                 return redirect('/userHome')
             else:
-              return render_template('error.html',error = 'Wrong Email Address or Password.')
+                return render_template('error.html', error='Wrong Email Address or Password.')
         else:
-            return render_template('error.html',error = 'Wrong Email Address or Password.')
+            return render_template('error.html', error='Wrong Email Address or Password.')
  
     except Exception as e:
-        return render_template('error.html',error = str(e))
+        return render_template('error.html', error=str(e))
     finally:
         cursor.close()
         connVL.close()
+
 
 @app.route('/showAddEmployee')
 def showAddEmployee():
     if session.get('user'):
         return render_template('addEmployee.html')
     else:
-        return render_template('error.html',error = 'Error No Access Please Sign In')
+        return render_template('error.html', error='Error No Access Please Sign In')
 
-@app.route('/addEmployee',methods=['POST','GET'])
+
+@app.route('/addEmployee', methods=['POST', 'GET'])
 def addEmployee():
     try:
         _staffid = request.form['inputStaffId']
@@ -100,21 +107,22 @@ def addEmployee():
             connSU = mysql.connect()
             cursor = connSU.cursor()
             _hashed_password = generate_password_hash(_password)
-            cursor.callproc('sp_createUser',(_staffid, _firstname, _surname, _email, _job, _hashed_password))
+            cursor.callproc('sp_createEmployee', (_staffid, _firstname, _surname, _email, _job, _hashed_password))
             data = cursor.fetchall()
 
             if len(data) is 0:
                 connSU.commit()
-                return json.dumps({'message':'User created successfully !'})
+                return redirect('/userHome')
             else:
                 return json.dumps({'error':str(data[0])})
         else:
-            return json.dumps({'html':'<span>Enter the required fields</span>'})       
+            return json.dumps({'html': '<span>Enter the required fields</span>'})
     except Exception as e:
         return json.dumps({'error':str(e)})
     finally:
         cursor.close() 
         connSU.close()
+
 
 @app.route('/showAddPatient')
 def showAddPatient():
@@ -125,9 +133,10 @@ def showAddPatient():
         data = cursor.fetchall()
         return render_template('addPatient.html', employees=data)
     else:
-        return render_template('error.html',error = 'Error No Access Please Sign In')
+        return render_template('error.html', error ='Error No Access Please Sign In')
 
-@app.route('/addPatient',methods=['POST','GET'])
+
+@app.route('/addPatient', methods=['POST', 'GET'])
 def addPatient():
     try:        
         _employees = request.form['inputEmployeeString']
@@ -153,7 +162,7 @@ def addPatient():
             # Connecting to mysql server
             connAP = mysql.connect()
             cursor = connAP.cursor()
-            cursor.callproc('sp_createPatient',(_number, _firstname, _surname))
+            cursor.callproc('sp_createPatient', (_number, _firstname, _surname))
             data = cursor.fetchall()
             cursor.close()
 
@@ -162,12 +171,13 @@ def addPatient():
                 connAP.close()
                 return redirect(url_for('showSuccess'))#Fix
             else:
-                return json.dumps({'error':str(data[0])})
+                return json.dumps({'error': str(data[0])})
         else:
-                return json.dumps({'html':'<span>Please enter all of the required fields</span>'})
+                return json.dumps({'html': '<span>Please enter all of the required fields</span>'})
     except Exception as e:
-        return json.dumps({'error':str(e)})
-        
+        return json.dumps({'error': str(e)})
+
+
 @app.route('/getPatients')
 def getPatients():
     try:
@@ -176,16 +186,17 @@ def getPatients():
  
             connGP = mysql.connect()
             cursor = connGP.cursor()
-            cursor.callproc('sp_GetPatientByAccess',(_user,))
+            cursor.callproc('sp_GetPatientByAccess', (_user,))
             data = cursor.fetchall()
 
             return render_template('showPatients.html', patients=data)
         else:
-            return render_template('error.html',error = 'Error No Access Please Sign In')
+            return render_template('error.html',error='Error No Access Please Sign In')
     except Exception as e:
-        return render_template('error.html', error = str(e))
+        return render_template('error.html', error=str(e))
 
-@app.route('/addNote/<string:pat_note>')#Fix
+
+@app.route('/addNote/<string:pat_note>')
 def addNote(pat_note):
     try:
         _patientId = pat_note
@@ -193,70 +204,60 @@ def addNote(pat_note):
         return render_template('addNote.html')
         
     except Exception as e:
-        return json.dumps({'error':str(e)})
+        return json.dumps({'error': str(e)})
 
-@app.route('/showAddNotes/<string:pat_number>')
-def showAddNotes(pat_number):
+
+@app.route('/showAddedNotes/<string:pat_number>')
+def showAddedNotes(pat_number):
     if session.get('user'):
-        connAN = mysql.connect()
-        cursor = connAN.cursor()
-        cursor.callproc('sp_selectPatients')
-        data1 = cursor.fetchall()
-        cursor.close()
         session['patient_id'] = pat_number
 
         _note = session.get('patient_id')
         connGP = mysql.connect()
         cursor = connGP.cursor()
-        cursor.callproc('sp_GetNotesByPatient',(_note,))
+        cursor.callproc('sp_GetNotesByPatient', (_note,))
         data2 = cursor.fetchall()
         cursor.close()
         return render_template('showPatient.html', notes=data2)
     else:
-        return render_template('error.html',error = 'Error No Access Please Sign In')
+        return render_template('error.html', error='Error No Access Please Sign In')
 
 
-@app.route('/insertNote',methods=['POST'])
+@app.route('/insertNote', methods=['POST'])
 def insertNote():
     try:
         if session.get('user'):
             _notetitle = request.form['inputNoteTitle']
             _notecontent = request.form['inputNoteContent']
             _user = session.get('user')
-            _patient = session.get ('patient_id')
+            _patient = session.get('patient_id')
 
-            if request.form.get('filePath') is None:
-                _filePath = ''
+            if _notetitle and _notecontent:
+                # connect to mysql
+                connIN = mysql.connect()
+                cursor = connIN.cursor()
+                cursor.callproc('sp_addNote', (_notetitle, _notecontent, _user, _patient))
+                data3 = cursor.fetchall()
+
+                if len(data3) is 0:
+                    connIN.commit()
+
+                else:
+                    return render_template('error.html', error='An error occurred!')
             else:
-                _filePath = request.form.get('filePath')
-
-            # connect to mysql
-            connIN = mysql.connect()
-            cursor = connIN.cursor()
-            cursor.callproc('sp_addNote',(_notetitle,_notecontent,_filePath,_user,_patient))
-            data3 = cursor.fetchall()
-
-            if len(data3) is 0:
-                connIN.commit()
-                return redirect('/userHome')
-            else:
-                return render_template('error.html',error = 'An error occurred!')
+                return json.dumps({'html': '<span>Please enter all of the required fields</span>'})
 
         else:
-            return render_template('error.html',error = 'Unauthorized Access')
+            return render_template('error.html', error='Unauthorized Access')
     except Exception as e:
-        return render_template('error.html',error = str(e))
-      
+        return render_template('error.html', error=str(e))
 
 
-@app.route('/tesseract')#Fix
+@app.route('/tesseract')
 def process_image():
-    im = Image.open("static/Uploads/1.png")
-    text = pytesseract.image_to_string(im, lang = 'eng')
+    im = Image.open("static/Uploads/hand1.jpg")
+    text = pytesseract.image_to_string(im, lang='eng')
     return render_template('tesseractResult.html', data=text)
-
-
-#Add upload functionality
 
 
 if __name__ == "__main__":

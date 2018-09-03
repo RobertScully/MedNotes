@@ -6,7 +6,6 @@ $(function(){
 		employeedata = employeedata + $("#inputEmployees").serialize();
 
 		$('#inputEmployeeString').val(employeedata);
-
 		$.ajax({
 			url: '/addPatient',
 			data: $('form').serialize(),

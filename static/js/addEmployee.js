@@ -1,6 +1,5 @@
 $(function(){
 	$('#btnAddEmployee').click(function(){
-			
 		$.ajax({
 			url: '/addEmployee',
 			data: $('form').serialize(),
