@@ -4,11 +4,15 @@ from werkzeug import generate_password_hash, check_password_hash
 from PIL import Image
 import pytesseract
 
+
+#Pointing pytesseract to tesseract installation
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
+
 
 mysql = MySQL()
 app = Flask(__name__)
 app.secret_key = 'This is a secretive key'
+
 
 # MySQL configurations
 app.config['MYSQL_DATABASE_USER'] = 'root'
@@ -18,6 +22,7 @@ app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
 
 
+#Main Route
 @app.route('/')
 def main():
     if session.get('user'):
@@ -26,11 +31,13 @@ def main():
         return redirect(url_for('showSignIn'))
 
 
+#Signin route
 @app.route('/showSignIn')
 def showSignIn():
     return render_template('signin.html')
 
 
+#Home Route
 @app.route('/userHome')
 def userHome():
     if session.get('user'):
@@ -47,12 +54,14 @@ def showSuccess():
         return render_template('error.html', error='Error No Access Please Sign In')
 
 
+#Route to log out user
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect('/')
 
 
+#Login Validation route. If successful redirects to user home. If details do not match rerouted to error screen.
 @app.route('/validateLogin', methods=['POST'])
 def validateLogin():
     try:
@@ -62,12 +71,16 @@ def validateLogin():
         # connect to mysql
         connVL = mysql.connect()
         cursor = connVL.cursor()
+        #Calling stored procedure to validate login details
         cursor.callproc('sp_validateLogin', (_staffid,))
         data = cursor.fetchall()
 
         if len(data) > 0:
+            #Comparing hashed password from database 
             if check_password_hash(str(data[0][2]),_password):
+                #Creating session variable containing users first and last name
                 session['user'] = data[0][3] + ' ' + data[0][4]
+                #Creating session variable containing users id
                 session['user_id'] = data[0][1]
                 return redirect('/userHome')
             else:
@@ -81,7 +94,7 @@ def validateLogin():
         cursor.close()
         connVL.close()
 
-
+#Route to add an employee. No link in web application to this route but usable for adding additional employees
 @app.route('/showAddEmployee')
 def showAddEmployee():
     if session.get('user'):
@@ -107,6 +120,7 @@ def addEmployee():
             connSU = mysql.connect()
             cursor = connSU.cursor()
             _hashed_password = generate_password_hash(_password)
+            #Calling procedure to create new employee user
             cursor.callproc('sp_createEmployee', (_staffid, _firstname, _surname, _email, _job, _hashed_password))
             data = cursor.fetchall()
 
@@ -123,19 +137,21 @@ def addEmployee():
         cursor.close() 
         connSU.close()
 
-
+#Route to connect to db and retrieve employees in order to fill list of employees table
 @app.route('/showAddPatient')
 def showAddPatient():
     if session.get('user'):
         connPL = mysql.connect()
         cursor = connPL.cursor()
+        #Procedure to select all employees
         cursor.callproc('sp_selectEmployees')
         data = cursor.fetchall()
+        #Routing to view of addpatient form in html. Passing contents of cursor which contains employee details to employees variable.
         return render_template('addPatient.html', employees=data)
     else:
         return render_template('error.html', error ='Error No Access Please Sign In')
 
-
+#Routing for handling of adding of a patient logic when user hits create patient.
 @app.route('/addPatient', methods=['POST', 'GET'])
 def addPatient():
     try:        
@@ -177,7 +193,7 @@ def addPatient():
     except Exception as e:
         return json.dumps({'error': str(e)})
 
-
+#Route to return a list of patients depending on which employee is attempting to view the list
 @app.route('/getPatients')
 def getPatients():
     try:
@@ -186,43 +202,49 @@ def getPatients():
  
             connGP = mysql.connect()
             cursor = connGP.cursor()
+            #stored procedure to select all patient details where the user currently loggeds id matches in the patient_access table
             cursor.callproc('sp_GetPatientByAccess', (_user,))
             data = cursor.fetchall()
-
+            #return html view of list of patients and pass contents of select from sp to patients var
             return render_template('showPatients.html', patients=data)
         else:
             return render_template('error.html',error='Error No Access Please Sign In')
     except Exception as e:
         return render_template('error.html', error=str(e))
 
-
+#route for adding a note to the currently selected patient
 @app.route('/addNote/<string:pat_note>')
 def addNote(pat_note):
     try:
         _patientId = pat_note
+        #setting a session variable that contains the most recently accessed patients id
         session['patient_id'] = _patientId
+        #display html page of the add note function
         return render_template('addNote.html')
         
     except Exception as e:
         return json.dumps({'error': str(e)})
 
-
+#route to display currently selected patients notes
 @app.route('/showAddedNotes/<string:pat_number>')
 def showAddedNotes(pat_number):
     if session.get('user'):
+        #creating another session variable to handle the patients number
         session['patient_id'] = pat_number
 
         _note = session.get('patient_id')
         connGP = mysql.connect()
         cursor = connGP.cursor()
+        #calling stored procedure to select all notes from the note table for the current patient
         cursor.callproc('sp_GetNotesByPatient', (_note,))
         data2 = cursor.fetchall()
         cursor.close()
+        #display patient details through html page. notes contains all note details which is iterated through to display in webpage
         return render_template('showPatient.html', notes=data2)
     else:
         return render_template('error.html', error='Error No Access Please Sign In')
 
-
+#route to insert a note
 @app.route('/insertNote', methods=['POST'])
 def insertNote():
     try:
@@ -252,7 +274,7 @@ def insertNote():
     except Exception as e:
         return render_template('error.html', error=str(e))
 
-
+#Route for displaying test cases of OCR results
 @app.route('/tesseract')
 def process_image():
     im = Image.open("static/Uploads/hand1.jpg")
